@@ -2,6 +2,7 @@ import { render } from "@opentui/solid";
 import { App } from "./app";
 import { ConsolePosition } from "@opentui/core";
 import { ThemeContextProvider } from "./theme";
+import { startServer } from "./rpc/server";
 
 render(
   () => (
@@ -17,3 +18,5 @@ render(
     },
   },
 );
+
+startServer();

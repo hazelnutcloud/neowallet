@@ -1,7 +1,14 @@
-import { JsonRpcRequest, type NeoWalletRpcSchema } from "./schema";
 import { Type, type } from "arktype";
 import * as methods from "./methods";
-import { RpcRequest, RpcResponse } from "ox";
+import { RpcRequest, RpcResponse, RpcSchema } from "ox";
+import * as wallet_getEthereumChains from "./methods/wallet_getEthereumChains";
+
+export const JsonRpcRequest = type({
+  id: "number",
+  jsonrpc: "'2.0'",
+  method: "string",
+  params: "unknown[]",
+});
 
 export async function handleRequest(body: unknown) {
   const validatedBase = JsonRpcRequest(body);
@@ -42,7 +49,7 @@ export async function handleRequest(body: unknown) {
     );
   }
 
-  const result = await handler(validatedParams);
+  const result = await handler(validatedParams as never);
 
   const validatedResult = responseValidator(result);
 
@@ -68,10 +75,40 @@ export async function handleRequest(body: unknown) {
   return rpcResponse;
 }
 
+export type NeoWalletRpcSchema = RpcSchema.From<
+  | RpcSchema.Default
+  | {
+      Request: {
+        method: "net_version";
+        params?: undefined;
+      };
+      ReturnType: number;
+    }
+  | {
+      Request: {
+        method: "eth_subscribe";
+        params: [string];
+      };
+      ReturnType: `0x${string}`;
+    }
+  | {
+      Request: {
+        method: "wallet_getEthereumChains";
+        params?: undefined;
+      };
+      ReturnType: wallet_getEthereumChains.Response;
+    }
+>;
+
 export function defineHandler<
   MethodName extends NeoWalletRpcSchema["Request"]["method"],
   ParamsValidator extends Type<
-    Extract<NeoWalletRpcSchema["Request"], { method: MethodName }>["params"]
+    Extract<
+      NeoWalletRpcSchema["Request"],
+      { method: MethodName }
+    >["params"] extends undefined
+      ? []
+      : Extract<NeoWalletRpcSchema["Request"], { method: MethodName }>["params"]
   >,
   ResponseValidator extends Type<
     Extract<

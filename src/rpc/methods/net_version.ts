@@ -1,10 +1,9 @@
 import { type } from "arktype";
-import { Address } from "../types";
 import { defineHandler } from "../handler";
 
 export default defineHandler({
-  method: "eth_requestAccounts",
+  method: "net_version",
   paramsValidator: type([]),
-  responseValidator: Address.array(),
-  handler: async (params) => [],
+  responseValidator: type.number,
+  handler: () => 1,
 });

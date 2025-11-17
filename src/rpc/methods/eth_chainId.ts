@@ -1,10 +1,12 @@
 import { type } from "arktype";
-import { Address } from "../types";
 import { defineHandler } from "../handler";
+import { Hex } from "../types";
 
 export default defineHandler({
-  method: "eth_requestAccounts",
+  method: "eth_chainId",
   paramsValidator: type([]),
-  responseValidator: Address.array(),
-  handler: async (params) => [],
+  responseValidator: Hex,
+  handler: () => {
+    return "0x1" as const;
+  },
 });

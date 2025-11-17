@@ -1,11 +1,13 @@
 import { handleRequest } from "./handler";
 import { type } from "arktype";
 
-export async function startServer() {
+export function startServer() {
   const server = Bun.serve({
     port: 1248,
     websocket: {
       async message(ws, message) {
+        console.log("Received request:", message);
+
         if (typeof message !== "string") {
           ws.send("Invalid message format");
           return;
@@ -26,6 +28,20 @@ export async function startServer() {
     async fetch(req, server) {
       if (server.upgrade(req)) {
         return;
+      }
+
+      if (req.method === "OPTIONS") {
+        return new Response(null, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        });
+      }
+
+      if (req.method !== "POST") {
+        return new Response("Method not allowed", { status: 405 });
       }
 
       const jsonBody = await req.json();
