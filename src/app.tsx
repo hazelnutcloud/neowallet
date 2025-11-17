@@ -1,9 +1,12 @@
 import { useKeyboard, useRenderer } from "@opentui/solid";
 import { useTheme } from "./theme";
+import { AccountsList } from "./components/AccountsList";
+import { useAccounts } from "./accounts/context";
 
 export function App() {
   const renderer = useRenderer();
   const theme = useTheme();
+  const { selectedAccount } = useAccounts();
 
   useKeyboard((key) => {
     switch (key.name) {
@@ -31,16 +34,28 @@ export function App() {
         >
           <text>left sidebar</text>
         </box>
-        <box flexGrow={3} padding={1}>
-          <text>main</text>
+        <box flexGrow={3} padding={1} flexDirection="column">
+          <text fg={theme.baseContent}>
+            Selected Account
+          </text>
+          {selectedAccount() ? (
+            <box flexDirection="column" gap={1} marginTop={1}>
+              <text>Name: {selectedAccount()!.name}</text>
+              <text>Address: {selectedAccount()!.address}</text>
+              <text>Source: {selectedAccount()!.source}</text>
+            </box>
+          ) : (
+            <text fg={theme.base100}>No account selected</text>
+          )}
         </box>
         <box
           flexGrow={1}
           padding={1}
           border={["left"]}
           borderColor={theme.base100}
+          flexDirection="column"
         >
-          <text>right sidebar</text>
+          <AccountsList />
         </box>
       </box>
       <box backgroundColor={theme.base300} gap={1} flexDirection="row">

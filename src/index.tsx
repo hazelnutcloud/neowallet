@@ -2,11 +2,14 @@ import { render } from "@opentui/solid";
 import { App } from "./app";
 import { ConsolePosition } from "@opentui/core";
 import { ThemeContextProvider } from "./theme";
+import { AccountsProvider } from "./accounts/context";
 
 render(
   () => (
     <ThemeContextProvider>
-      <App />
+      <AccountsProvider>
+        <App />
+      </AccountsProvider>
     </ThemeContextProvider>
   ),
   {

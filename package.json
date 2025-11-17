@@ -18,6 +18,8 @@
     "@opentui/core": "^0.1.41",
     "@opentui/solid": "^0.1.41",
     "babel-preset-solid": "^1.9.10",
-    "solid-js": "^1.9.10"
+    "keytar": "^7.9.0",
+    "solid-js": "^1.9.10",
+    "viem": "^2.39.0"
   }
 }
