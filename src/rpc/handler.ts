@@ -1,37 +1,71 @@
 import { JsonRpcRequest, type NeoWalletRpcSchema } from "./schema";
 import { Type, type } from "arktype";
 import * as methods from "./methods";
+import { RpcRequest, RpcResponse } from "ox";
 
 export async function handleRequest(body: unknown) {
-  const parsedBase = JsonRpcRequest(body);
+  const validatedBase = JsonRpcRequest(body);
 
-  if (parsedBase instanceof type.errors) {
-    throw parsedBase;
+  if (validatedBase instanceof type.errors) {
+    return validatedBase;
   }
 
-  const maybeMethod = methods[parsedBase.method as keyof typeof methods];
+  const rpcRequest = RpcRequest.from(validatedBase);
+
+  const maybeMethod = methods[rpcRequest.method as keyof typeof methods];
 
   if (!maybeMethod) {
-    throw new Error(`Method not found: ${parsedBase.method}`);
+    return RpcResponse.from(
+      {
+        error: new RpcResponse.MethodNotFoundError(),
+      },
+      {
+        request: rpcRequest,
+      },
+    );
   }
 
   const { handler, paramsValidator, responseValidator } = maybeMethod;
 
-  const validatedParams = paramsValidator(parsedBase.params);
+  const validatedParams = paramsValidator(rpcRequest.params);
 
   if (validatedParams instanceof type.errors) {
-    throw validatedParams;
+    return RpcResponse.from(
+      {
+        error: new RpcResponse.InvalidParamsError({
+          data: validatedParams.summary,
+        }),
+      },
+      {
+        request: rpcRequest,
+      },
+    );
   }
 
   const result = await handler(validatedParams);
 
-  const validatedResponse = responseValidator(result);
+  const validatedResult = responseValidator(result);
 
-  if (validatedResponse instanceof type.errors) {
-    throw validatedResponse;
+  if (validatedResult instanceof type.errors) {
+    console.error(
+      `Invalid response for ${rpcRequest}: ${validatedResult.summary}`,
+    );
+    return RpcResponse.from(
+      {
+        error: new RpcResponse.InternalError(),
+      },
+      {
+        request: rpcRequest,
+      },
+    );
   }
 
-  return validatedResponse;
+  const rpcResponse = RpcResponse.from(
+    { result: validatedResult },
+    { request: rpcRequest },
+  );
+
+  return rpcResponse;
 }
 
 export function defineHandler<
